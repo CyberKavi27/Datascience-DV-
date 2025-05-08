@@ -1,0 +1,119 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyM1PFw0f+/mup8y6pr+slKI",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/CyberKavi27/Datascience-DV-/blob/main/Datascience-Dv-\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "\n",
+        "import pandas as pd\n",
+        "from sklearn.feature_extraction.text import TfidfVectorizer\n",
+        "from sklearn.metrics.pairwise import cosine_similarity\n",
+        "import numpy as np\n",
+        "\n",
+        "# Sample movie dataset\n",
+        "movies = pd.DataFrame({\n",
+        "    'title': ['Inception', 'The Matrix', 'Interstellar', 'The Dark Knight', 'Pulp Fiction',\n",
+        "              'Forrest Gump', 'Titanic', 'Avatar', 'The Shawshank Redemption', 'Fight Club'],\n",
+        "    'genres': ['Sci-Fi Action Thriller', 'Sci-Fi Action', 'Sci-Fi Adventure Drama',\n",
+        "               'Action Crime Drama', 'Crime Drama', 'Drama Romance', 'Drama Romance',\n",
+        "               'Action Adventure Sci-Fi', 'Drama', 'Drama']\n",
+        "})\n",
+        "\n",
+        "def preprocess_genres(genre_string):\n",
+        "    return genre_string.replace(' ', ' ').lower()\n",
+        "\n",
+        "def get_recommendations(user_genres, num_recommendations=3):\n",
+        "    # Combine user genres into a single string\n",
+        "    user_genres = ' '.join(user_genres).lower()\n",
+        "\n",
+        "    # Preprocess genres\n",
+        "    movies['processed_genres'] = movies['genres'].apply(preprocess_genres)\n",
+        "\n",
+        "    # Create TF-IDF vectorizer\n",
+        "    tfidf = TfidfVectorizer()\n",
+        "    tfidf_matrix = tfidf.fit_transform(movies['processed_genres'])\n",
+        "    user_tfidf = tfidf.transform([user_genres])\n",
+        "\n",
+        "    # Calculate cosine similarity\n",
+        "    cosine_sim = cosine_similarity(user_tfidf, tfidf_matrix)\n",
+        "\n",
+        "    # Get top recommendations\n",
+        "    sim_scores = cosine_sim[0]\n",
+        "    top_indices = sim_scores.argsort()[-num_recommendations:][::-1]\n",
+        "\n",
+        "    return movies.iloc[top_indices][['title', 'genres']]\n",
+        "\n",
+        "def main():\n",
+        "    print(\"Available genres: Action, Adventure, Comedy, Crime, Drama, Romance, Sci-Fi, Thriller\")\n",
+        "    user_input = input(\"Enter preferred genres (separated by commas, e.g., Action, Sci-Fi): \")\n",
+        "    user_genres = [genre.strip() for genre in user_input.split(',')]\n",
+        "\n",
+        "    # Validate genres\n",
+        "    valid_genres = ['Action', 'Adventure', 'Comedy', 'Crime', 'Drama', 'Romance', 'Sci-Fi', 'Thriller']\n",
+        "    user_genres = [genre for genre in user_genres if genre in valid_genres]\n",
+        "\n",
+        "    if not user_genres:\n",
+        "        print(\"No valid genres entered. Please try again.\")\n",
+        "        return\n",
+        "\n",
+        "    # Get recommendations\n",
+        "    recommendations = get_recommendations(user_genres)\n",
+        "\n",
+        "    print(\"\\nRecommended Movies:\")\n",
+        "    for idx, row in recommendations.iterrows():\n",
+        "        print(f\"- {row['title']} ({row['genres']})\")\n",
+        "\n",
+        "if __name__ == \"__main__\":\n",
+        "    main()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "MUYDU5LzVmfq",
+        "outputId": "acb096d5-7200-4003-c4b2-8800cd22e551"
+      },
+      "execution_count": 2,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Available genres: Action, Adventure, Comedy, Crime, Drama, Romance, Sci-Fi, Thriller\n",
+            "Enter preferred genres (separated by commas, e.g., Action, Sci-Fi): Comedy\n",
+            "\n",
+            "Recommended Movies:\n",
+            "- Fight Club (Drama)\n",
+            "- The Shawshank Redemption (Drama)\n",
+            "- Avatar (Action Adventure Sci-Fi)\n"
+          ]
+        }
+      ]
+    }
+  ]
+}
